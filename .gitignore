@@ -1,0 +1,9 @@
+.idea/
+__pycache__/
+metastore_db/
+derby.log
+.DS_Store
+build.sbt
+__init__.py
+project/
+target/
