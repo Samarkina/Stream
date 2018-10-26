@@ -7,3 +7,5 @@ build.sbt
 __init__.py
 project/
 target/
+kafka-zookeeper/properties/data/kafka
+kafka-zookeeper/properties/data/zookeeper
