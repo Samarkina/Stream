@@ -46,7 +46,7 @@ class CassandraWriter(val connector: CassandraConnector) extends ForeachWriter[A
   }
 
   def cassandraQuery(record: AggregatedMessage): String =
-    s"""INSERT INTO $KEYSPACE.$TABLE (ip) VALUES('${record.ip}')"""
+    s"""INSERT INTO $KEYSPACE.$TABLE (ip) VALUES('${record.ip}') USING TTL 20"""
 
 }
 
@@ -84,7 +84,7 @@ object StructStream {
   }
 
   def main(): Unit = {
-    val spark = SparkSession.builder
+    val spark = SparkSession.builder()
       .master("local[*]")
       .getOrCreate()
     spark.sparkContext.setLogLevel("WARN")

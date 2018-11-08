@@ -3,10 +3,13 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.streaming.kafka010._
 import org.apache.spark._
 import org.apache.spark.streaming._
+import java.sql.Timestamp
 
 
 object Dstream {
-  def testfunctions(): Unit = {
+
+  def main(): Unit = {
+
     val conf = new SparkConf().setAppName("stream").setMaster("local[2]")
     val ssc = new StreamingContext(conf, Seconds(1))
 
