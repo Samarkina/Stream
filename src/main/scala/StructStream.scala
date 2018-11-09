@@ -8,25 +8,6 @@ import org.apache.spark.sql.functions.{collect_set, sum, window}
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
 import io.circe.parser._
 
-case class Message(unix_time: Long, category_id: Long, ip: String, typeID: String)
-
-case class TrasformedMessage(unix_time: Timestamp, category_id: Long, ip: String, clicks: Long, views: Long)
-
-case class AggregatedMessage(categories: Set[Long], ip: String, clicks: Long, views: Long)
-
-
-object Message {
-  implicit val decoder: Decoder[Message] =
-    Decoder.forProduct4("unix_time", "category_id", "ip", "typeID")(Message.apply)
-
-  def transform(message: Message): TrasformedMessage = {
-    if (message.typeID == "click")
-      TrasformedMessage(new Timestamp(message.unix_time), message.category_id, message.ip, 1, 0)
-    else
-      TrasformedMessage(new Timestamp(message.unix_time), message.category_id, message.ip, 0, 1)
-  }
-}
-
 class CassandraWriter(val connector: CassandraConnector) extends ForeachWriter[AggregatedMessage] {
   val KEYSPACE = "StreamingDB"
   val TABLE = "BotsStructured"
@@ -46,7 +27,7 @@ class CassandraWriter(val connector: CassandraConnector) extends ForeachWriter[A
   }
 
   def cassandraQuery(record: AggregatedMessage): String =
-    s"""INSERT INTO $KEYSPACE.$TABLE (ip) VALUES('${record.ip}') USING TTL 20"""
+    s"""INSERT INTO $KEYSPACE.$TABLE (ip) VALUES('${record.ip}') USING TTL 600"""
 
 }
 
@@ -86,9 +67,9 @@ object StructStream {
   def main(): Unit = {
     val spark = SparkSession.builder()
       .master("local[*]")
+       .config("spark.sql.streaming.checkpointLocation", "/tmp/sparkCheckpoint")
       .getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
-
     import spark.implicits._
 
     val df = spark
@@ -111,7 +92,7 @@ object StructStream {
         .filter(mess => IsBot.classification(mess.clicks, mess.views, mess.categories))
 
     val exportedIps = writeToCassandra(spark, bots)
-      .trigger(Trigger.ProcessingTime("10 seconds"))
+      .trigger(Trigger.ProcessingTime("20 seconds"))
 
     exportedIps
       .outputMode(OutputMode.Update())
