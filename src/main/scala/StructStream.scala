@@ -8,6 +8,7 @@ import org.apache.spark.sql.functions.{collect_set, sum, window}
 import org.apache.spark.sql.streaming.{DataStreamWriter, OutputMode, Trigger}
 import io.circe.parser._
 
+
 class CassandraWriter(val connector: CassandraConnector) extends ForeachWriter[AggregatedMessage] {
   val KEYSPACE = "StreamingDB"
   val TABLE = "BotsStructured"
@@ -50,7 +51,7 @@ object StructStream {
     })
   }
 
-  def aggregateDF(transformedDF: Dataset[TrasformedMessage], spark: SparkSession): Dataset[AggregatedMessage] = {
+  def aggregateDF(transformedDF: Dataset[TransformedMessage], spark: SparkSession): Dataset[AggregatedMessage] = {
     import org.apache.spark.sql.functions._
     import spark.implicits._
     transformedDF
@@ -86,7 +87,10 @@ object StructStream {
     val transformedDF = decodedDF
       .map(mess => Message.transform(mess))
 
-    val aggregated = aggregateDF(transformedDF, spark)
+    val transformedDFTimestamp = transformedDF
+        .map(mess => Message.transformedToTimestamp(mess))
+
+    val aggregated = aggregateDF(transformedDFTimestamp, spark)
 
     val bots = aggregated
         .filter(mess => IsBot.classification(mess.clicks, mess.views, mess.categories))
