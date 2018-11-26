@@ -26,3 +26,5 @@ libraryDependencies ++= Seq(
 
 libraryDependencies += "com.datastax.spark" %% "spark-cassandra-connector" % "2.3.2"
 
+// unitTest
+libraryDependencies += "org.scalatest" % "scalatest_2.11" % "3.0.5" % "test"
