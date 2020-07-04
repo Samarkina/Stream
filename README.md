@@ -58,7 +58,6 @@ For running Zookeeper and Kafka
 For migrating
 ```
 ./run.sh
-
 ```
 
 Cassandra database
